@@ -54,3 +54,65 @@ didn't learn the acronym because it predates RAG's mainstream adoption.
 **Takeaway:** Embedding models have a knowledge cutoff. Domain-specific acronyms
 may not be well-represented. Production fix: query expansion (LLM rewrites query
 with expanded acronyms) or hybrid search (combine dense + sparse retrieval).
+
+
+## Day 2 — FAISS results and a key insight
+
+### What worked
+- Query "How do I search vectors quickly?" → top match was the FAISS sentence at distance 0.924.
+- Confident gap between #1 (0.924) and #2 (1.331) shows the ranking is decisive.
+
+### What broke (and what it teaches)
+- Query "What is RAG?" → didn't find the RAG sentence. Cricket scored almost the same as embeddings.
+- Same root cause as before: MiniLM doesn't recognize the acronym "RAG".
+- All top distances were >1.7 — a clear "no good match" signal.
+
+### Key engineering insight
+- Distance values carry information. Low (0.5-1.0) = confident. High (>1.5) = weak match.
+- This is the basis for the Day 9 hallucination guard: if best distance is above a threshold, refuse to answer rather than confabulate.
+- Tradeoff to tune: too low a threshold → over-refuses. Too high → hallucinates.
+
+### Mitigations for production
+- Query expansion: pre-process user query through an LLM to expand acronyms before embedding.
+  ("What is RAG?" → "What is RAG (Retrieval-Augmented Generation)?")
+- Hybrid retrieval: combine dense (semantic) + sparse (BM25 keyword) search.
+- Better embedding model: BGE-base, e5-large catch acronyms better but are 3-5x slower.
+
+
+# Day 3 — PDF Loading and Chunking
+
+## Why chunking exists
+- LLMs have context window limits (Llama 3 8B = 8192 tokens ≈ 6000 words)
+- Academic papers are 8000-15000 words → can't fit a whole paper in one prompt
+- Also: shorter prompts = faster, cheaper, higher quality answers
+
+## The chunking tradeoff
+- Small chunks (300 chars): precise retrieval, but lose paragraph context
+- Large chunks (2000 chars): preserve context, but introduce noise into LLM prompts
+- I picked 1000 chars + 200 char overlap as the sweet spot
+
+## Why overlap?
+- A concept introduced at chunk boundary stays connected
+- E.g., a definition stated at end of chunk 0 is repeated at start of chunk 1
+- 20% overlap is the standard tradeoff (more overlap = more redundancy in storage)
+
+## Why PyMuPDF (fitz)?
+- Fast, accurate on complex academic PDFs (multi-column, math)
+- Alternatives: PyPDF2 (slow, loses ordering), pdfplumber (great for tables, overkill here)
+- Trade-off: PyMuPDF wraps a C library — slightly trickier to install but worth it
+
+## Why RecursiveCharacterTextSplitter?
+- Tries natural boundaries first: paragraphs → lines → sentences → words → chars
+- Result: chunks respect document structure when possible
+- Naive splitting at exactly N chars produces ugly mid-word breaks
+
+## Why characters, not tokens?
+- Simpler, no tokenizer dependency
+- ~4 chars per English token, so 1000 chars ≈ 250 tokens
+- For production precision: switch to tiktoken for exact token counting
+
+## Experiment results (size: chunk count)
+- 300: 220 chunks (precise but fragmented)
+- 500: 130 chunks
+- 1000: 67 chunks (sweet spot for academic papers)
+- 2000: 33 chunks (lots of context but noisy)
