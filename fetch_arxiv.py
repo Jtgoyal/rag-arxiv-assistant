@@ -24,8 +24,7 @@ def fetch_papers(topic: str, max_results: int = 5):
     search = arxiv.Search(
         query=topic,
         max_results=max_results,
-        sort_by=arxiv.SortCriterion.SubmittedDate,
-        sort_order=arxiv.SortOrder.Descending,
+        sort_by=arxiv.SortCriterion.Relevance,
     )
 
     # arxiv.Client is the recommended way to fetch.

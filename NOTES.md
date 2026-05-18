@@ -150,3 +150,44 @@ Root cause: ArXiv's informal rate limit (~1 req / 3 sec). My code fired
 2. Catch the rate-limit error (HTTP 429)
 3. Exponential backoff between retries
 4. Fail loudly after N retries — don't hang forever
+
+## Day 4 — Pipeline shipping milestone
+
+### What works end-to-end now
+- Topic string → ArXiv API → PDFs downloaded → text extracted → chunked → metadata attached
+- 192 chunks generated from 2 papers in ~5 seconds
+- PDF caching prevents re-downloads across runs
+
+### Observed retrieval issue
+Sorted by SubmittedDate first → got newest papers matching ANY query term,
+not the most relevant. "retrieval augmented generation" returned papers on
+visual transformers and datacenter power.
+
+Fix: switched to SortCriterion.Relevance for better topic matching.
+General lesson: ranking has competing objectives (recency vs relevance).
+Production apps should make this a user-facing choice.
+
+### Chunk quality observed
+- Clean text extraction (no garbled chars, no mid-word breaks)
+- Inline paper citations preserved in chunks (helpful for some queries, noise for others)
+- Chunks contain self-contained thoughts thanks to overlap working
+
+
+## Day 4 — Bug Story 2: Rate limit on the search API itself
+
+After deleting cached PDFs and re-running with relevance sort, hit HTTP 429
+on the SEARCH endpoint (not just downloads). ArXiv tracks request frequency
+per IP, and several rapid runs that day triggered a temporary cooldown.
+
+### What I learned
+- Rate limits apply to ALL endpoints, not just heavy ones (PDF downloads).
+- The retry logic in `arxiv.Client(num_retries=5)` couldn't recover because
+  the cooldown was longer than the retry budget.
+- Best fix: don't fight rate limits, just wait. 10-15 min cooldown resolves it.
+- Production fix: persistent cache so repeat queries don't re-hit the API at all.
+
+### Interview takeaway
+APIs rate-limit by IP and by frequency, not just by request count. Caching at
+multiple levels (search results, metadata, PDFs) is the real defense, not
+just retry-with-backoff. Backoff handles transient spikes; caching handles
+the steady state.
