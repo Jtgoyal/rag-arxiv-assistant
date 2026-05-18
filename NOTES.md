@@ -116,3 +116,37 @@ with expanded acronyms) or hybrid search (combine dense + sparse retrieval).
 - 500: 130 chunks
 - 1000: 67 chunks (sweet spot for academic papers)
 - 2000: 33 chunks (lots of context but noisy)
+
+
+## Day 3 — Overlap working as designed (observed)
+
+Verified the 200-char overlap by inspecting consecutive chunks:
+
+End of chunk 0: "...Pre-trained models with a differentiable access mechanism to explicit non-parametric"
+Start of chunk 1: "...Pre-trained models with a differentiable access mechanism to explicit non..."
+
+The phrase "Pre-trained models with a differentiable access mechanism" appears
+in BOTH chunks because of the 200-char overlap. If retrieval picks either chunk,
+the full concept is preserved.
+
+This is the failure mode overlap prevents: a definition severed mid-sentence at
+a chunk boundary, causing the LLM to miss context.
+
+
+## Day 4 — Bug Story: ArXiv 429 Rate Limit
+
+Hit HTTP 429 (Too Many Requests) when fetching 3 PDFs back-to-back.
+Root cause: ArXiv's informal rate limit (~1 req / 3 sec). My code fired
+~4 requests in ~2 seconds.
+
+### Fix
+- Configured `arxiv.Client(delay_seconds=3, num_retries=5)` for metadata calls
+- Wrapped PDF downloads in retry loop with exponential backoff (10s, 20s, 30s)
+- Added 3-second sleep between successful downloads as baseline politeness
+- Cached downloaded PDFs to avoid re-fetching on reruns
+
+### General pattern for rate-limited APIs
+1. Respect documented (or informal) request limits
+2. Catch the rate-limit error (HTTP 429)
+3. Exponential backoff between retries
+4. Fail loudly after N retries — don't hang forever
