@@ -191,3 +191,34 @@ APIs rate-limit by IP and by frequency, not just by request count. Caching at
 multiple levels (search results, metadata, PDFs) is the real defense, not
 just retry-with-backoff. Backoff handles transient spikes; caching handles
 the steady state.
+
+
+# Day 5 — End-to-End RAG (Milestone)
+
+## What now works
+Full pipeline: topic → ArXiv fetch → chunk → embed → FAISS → retrieve → LLM → cited answer.
+CLI works. Real grounded answers from real papers with [1], [2] citations.
+
+## Architecture summary
+- PaperIndex class: bundles embed model + FAISS index + chunks list
+- Parallel arrays pattern: chunks[i] ↔ vector i in FAISS (FAISS doesn't store metadata)
+- Numbered citations [1], [2] inline; legend at bottom shows paper title + URL + distance
+
+## Design decisions
+- temperature=0.1 (low) — RAG is grounded, want determinism not creativity
+- TOP_K=5 — retrieve 5 chunks per query; tested 3, 5, 10. 5 was sweet spot
+- batch_size=32 for embedding — reasonable for CPU, no OOM at our chunk counts
+
+## Testing observations
+[Fill this in after running 6+ test queries — these are your eval insights for Day 11]
+- Direct factual queries: usually good
+- Out-of-scope queries: LLM often still tries to answer instead of refusing
+  → Day 9 will add a distance-threshold guard
+- Acronym queries (just "RAG"): still weaker than spelled-out
+  → could mitigate with query expansion
+
+## Interview pitch (memorize)
+"I built a research assistant that retrieves ArXiv papers, embeds them with
+sentence-transformers, indexes in FAISS, and uses Groq's Llama 3 for grounded
+generation. Each chunk has metadata (paper title, URL) so the LLM produces
+cited answers with [1], [2] inline references."
