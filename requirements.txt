@@ -8,3 +8,4 @@ arxiv
 pymupdf
 python-dotenv
 sentence-transformers
+torchvision

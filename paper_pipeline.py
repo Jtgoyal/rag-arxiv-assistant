@@ -1,7 +1,8 @@
 # paper_pipeline.py
 # Day 4: Combine ArXiv fetching + PDF chunking into one pipeline.
 # Output: list of dicts with chunk text + source metadata.
-
+import os
+import glob
 from fetch_arxiv import fetch_papers, download_paper
 from pdf_to_chunks import load_pdf, chunk_text
 
@@ -77,3 +78,46 @@ if __name__ == "__main__":
         print(f"URL: {sample['paper_url']}")
         print(f"Chunk ID: {sample['chunk_id']}")
         print(f"\nText:\n{sample['text']}")
+
+
+import glob
+
+def load_and_chunk_local(folder: str = "local_papers", chunk_size: int = 1000, chunk_overlap: int = 200):
+    """
+    LOCAL MODE: Load PDFs from a local folder instead of fetching from ArXiv.
+    Useful for testing when ArXiv is rate-limiting, or for offline development.
+
+    Each PDF's filename (minus extension) is used as the 'paper_title'.
+    URL field is set to the local path.
+    """
+    pdf_paths = sorted(glob.glob(os.path.join(folder, "*.pdf")))
+    if not pdf_paths:
+        raise FileNotFoundError(f"No PDFs found in '{folder}/'. Add some PDFs first.")
+
+    print(f"Loading {len(pdf_paths)} local PDFs from '{folder}/'...\n")
+
+    all_chunks = []
+    for i, pdf_path in enumerate(pdf_paths, 1):
+        title = os.path.splitext(os.path.basename(pdf_path))[0]
+        print(f"[{i}/{len(pdf_paths)}] Processing: {title}")
+
+        try:
+            text = load_pdf(pdf_path)
+        except Exception as e:
+            print(f"  ❌ Parse failed: {e}")
+            continue
+
+        chunks = chunk_text(text, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+        print(f"  ✓ {len(chunks)} chunks created")
+
+        for j, chunk in enumerate(chunks):
+            all_chunks.append({
+                "text": chunk,
+                "paper_title": title,
+                "paper_url": pdf_path,  # local path stands in for URL
+                "chunk_id": f"{title}__chunk_{j}",
+            })
+
+    print(f"\nTotal chunks: {len(all_chunks)}")
+    return all_chunks
+

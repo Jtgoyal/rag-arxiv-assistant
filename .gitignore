@@ -221,3 +221,5 @@ __marimo__/
 papers/
 test_paper.pdf
 *.pdf
+
+local_papers/
