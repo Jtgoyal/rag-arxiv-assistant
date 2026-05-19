@@ -222,3 +222,80 @@ CLI works. Real grounded answers from real papers with [1], [2] citations.
 sentence-transformers, indexes in FAISS, and uses Groq's Llama 3 for grounded
 generation. Each chunk has metadata (paper title, URL) so the LLM produces
 cited answers with [1], [2] inline references."
+
+## Day 5 — Quick bug story
+
+Hit `NameError: 'os' is not defined` after adding `load_and_chunk_local`.
+Cause: forgot `import os` at top of paper_pipeline.py.
+
+**Lesson:** Read tracebacks bottom-up. The last line names the error and
+usually pinpoints the fix. Python 3.10+ tracebacks even suggest the fix
+("Did you forget to import 'os'?").
+
+## Day 5 — Critical insight: distance ≠ relevance
+
+### Observation
+- Query "what is use of RAG in current time" → refused. Top distances: 1.09-1.39
+- Query "What problems does RAG solve" → answered confidently. Top distances: 1.12-1.28
+- **Same distance range, opposite behavior.**
+
+### Root cause
+- LLM doesn't see distance numbers in the prompt — only chunk text
+- LLM's refusal decision is content-based: "does this text answer the question?"
+- Two chunks can be vectorally close but semantically off-target
+
+### Implications for Day 9 hallucination guard
+- Original plan: hard threshold on distance to refuse
+- Revised plan: distance threshold for obvious off-topic (high d > 1.5)
+  PLUS keep prompt-based "refuse if insufficient" — they catch different failure modes
+- Distance = "vector proximity"; LLM-judge = "content relevance"
+- These are correlated but NOT identical signals
+
+### Why L2 distance is weakly calibrated
+- Distance 1.0 has no absolute meaning ("50% relevant" is wrong intuition)
+- It's relative within a given query, not comparable across queries
+- For absolute thresholds, you'd normalize per-query (e.g., compare top-1 to top-10)
+  or use score-based rerankers (cross-encoders)
+
+
+# Day 6 — Streamlit UI
+
+## What's working
+- Browser-based UI at localhost:8501
+- Sidebar: load papers from Local mode or ArXiv mode
+- Main area: type question, get cited answer with expandable sources
+- Each citation shows: paper title, URL, distance, full chunk text on expand
+- Refusal detection: when LLM declines, UI shows a yellow warning banner
+
+## Streamlit architecture decisions
+- **st.session_state** for the FAISS index — built once, reused across reruns
+- **st.spinner** for long-running ops (loading, generating) — UX requirement
+- **st.expander** for sources — progressive disclosure, keeps UI clean
+- **st.markdown vs st.text** — markdown for formatted output, text for raw chunks
+- **Heuristic refusal detection** by string matching — imperfect but reasonable until Day 9
+
+## Why Streamlit (interview answer)
+Pure Python, fast iteration, free Streamlit Cloud deployment, standard in ML
+demo community. For production, FastAPI + React would be the next step.
+
+## What's NOT yet done (for future days)
+- Day 8: numbered citation polish (clickable refs)
+- Day 9: hallucination guard with distance threshold (replaces string-match refusal)
+- Day 10: deployment to Streamlit Cloud
+- Day 11: evaluation set with metrics
+- Day 12: edge-case handling, error states
+- Day 13: README + demo GIF
+
+
+## Day 6 — Dependency bug
+
+Hit `ModuleNotFoundError: No module named 'torchvision'` when running streamlit run.
+Root cause: transformers eagerly loads all model types at import, including ZoeDepth
+which needs torchvision. Not directly used by my project, but pulled in transitively.
+
+Fix: `pip install torchvision`. Added to requirements.txt so Streamlit Cloud
+deployment doesn't hit the same error.
+
+Lesson: transitive deps matter. Production deploys read requirements.txt only;
+if a package is installed only because you happened to have it locally, deployment
+will break. Always promote dependencies into requirements.txt when you hit them.

@@ -41,8 +41,7 @@ def fetch_papers(topic: str, max_results: int = 5):
 
 def download_paper(paper, output_dir: str = "papers", max_retries: int = 3) -> str:
     """
-    Download a paper's PDF to local disk, with retry on rate-limit.
-    Returns the path to the downloaded file.
+    Download a paper's PDF with retries for both rate limits AND incomplete downloads.
     """
     os.makedirs(output_dir, exist_ok=True)
 
@@ -50,27 +49,36 @@ def download_paper(paper, output_dir: str = "papers", max_retries: int = 3) -> s
     filename = f"{arxiv_id}.pdf"
     filepath = os.path.join(output_dir, filename)
 
-    # Skip if cached
     if os.path.exists(filepath):
-        print(f"  Already cached: {filename}")
-        return filepath
+        # Sanity check: PDF should be at least 50KB. If it's tiny, it's a corrupted half-download.
+        if os.path.getsize(filepath) < 50 * 1024:
+            print(f"  Cached file looks corrupted ({os.path.getsize(filepath)} bytes), re-downloading...")
+            os.remove(filepath)
+        else:
+            print(f"  Already cached: {filename}")
+            return filepath
 
-    # Retry loop with exponential backoff
     for attempt in range(max_retries):
         try:
             paper.download_pdf(dirpath=output_dir, filename=filename)
-            time.sleep(3)  # be polite to ArXiv between successful downloads
+            time.sleep(3)  # politeness
             return filepath
         except HTTPError as e:
             if e.code == 429:
-                wait = (attempt + 1) * 10  # 10s, 20s, 30s
+                wait = (attempt + 1) * 10
                 print(f"  Rate limited (429). Waiting {wait}s before retry {attempt + 1}/{max_retries}...")
                 time.sleep(wait)
             else:
-                raise  # other HTTP errors → fail fast
+                print(f"  HTTPError {e.code}: {e}")
+                raise
+        except Exception as e:
+            # Catches incomplete-read, timeout, connection errors
+            wait = (attempt + 1) * 5
+            print(f"  Download error: {e}. Waiting {wait}s before retry {attempt + 1}/{max_retries}...")
+            time.sleep(wait)
 
-    raise RuntimeError(f"Failed to download {arxiv_id} after {max_retries} retries")
-
+    print(f"  ❌ Failed after {max_retries} retries — skipping this paper")
+    raise RuntimeError(f"Failed to download {arxiv_id}")
 
 # ====================
 # MAIN — test it
