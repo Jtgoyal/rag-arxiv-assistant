@@ -50,48 +50,18 @@ Researchers face an information-overload problem: ArXiv adds ~500 new ML papers 
 
 ## Architecture
 
+```mermaid
+flowchart TD
+    User[User in Browser] -->|topic / question| UI[Streamlit UI app.py]
+    UI -->|topic| Source[ArXiv API or Local PDFs]
+    UI -->|question| QEmbed[Embed Query MiniLM]
+    Source --> Parser[PyMuPDF + Chunker]
+    Parser -->|embed chunks| Index[FAISS Index]
+    QEmbed -->|384-dim vector| Index
+    Index -->|top-K chunks + metadata| Prompt[Prompt Construction]
+    Prompt --> LLM[Groq Llama 3]
+    LLM -->|cited answer| User
 ```
-
-┌─────────────────────────────────────────────────────────────┐
-│                      USER (Browser)                          │
-└──────────────────────────┬──────────────────────────────────┘
-│ topic / question
-▼
-┌─────────────────────────────────────────────────────────────┐
-│                   Streamlit UI (app.py)                      │
-└────────┬────────────────────────────────────┬───────────────┘
-│ topic                              │ question
-▼                                    ▼
-┌────────────┐                       ┌──────────────┐
-│  ArXiv API │                       │   Embed Q    │
-│  (or local │                       │  (MiniLM)    │
-│   PDFs)    │                       └──────┬───────┘
-└────┬───────┘                              │ 384-dim
-│                                      ▼
-▼                              ┌──────────────┐
-┌────────────┐                      │  FAISS Index │
-│  PyMuPDF   │                      │  (search)    │
-│  + Chunker │                      └──────┬───────┘
-└────┬───────┘                             │ top-K chunks
-│                                      │ + metadata
-▼                                      ▼
-┌────────────┐  embed   ┌──────────────────────────────┐
-│ Chunks +   │ ───────► │  Prompt Construction          │
-│ metadata   │          │  "Use only context. Cite [N]"│
-└────────────┘          └──────────────┬───────────────┘
-│
-▼
-┌──────────────┐
-│  Groq Llama3 │
-│   (generate) │
-└──────┬───────┘
-│ cited answer
-▼
-Back to user
-
-```
-
----
 
 ## Key Engineering Decisions
 
