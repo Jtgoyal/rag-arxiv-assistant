@@ -299,3 +299,31 @@ deployment doesn't hit the same error.
 Lesson: transitive deps matter. Production deploys read requirements.txt only;
 if a package is installed only because you happened to have it locally, deployment
 will break. Always promote dependencies into requirements.txt when you hit them.
+
+# Day 7 — README + Presentation Polish
+
+## Why this day matters
+Recruiters spend ~30 seconds on a project before deciding whether to dig deeper.
+The README is the single most important file in the repo for that 30-second pitch.
+
+## What I added
+- Proper README with: pitch, example Q&A, tech stack table, architecture diagram,
+  engineering decisions section, setup, project structure, roadmap
+- .env.example so anyone cloning knows what env vars to set
+- (Optional) Streamlit theme config
+
+## Engineering decisions made visible in README
+- Chunk size choice and rationale (1000 + 200 overlap)
+- Two-source ingestion (Local + ArXiv) with the engineering reason
+- Hallucination guard via prompt + the "distance ≠ relevance" insight
+- Defensive ArXiv downloads with specific failure modes handled
+
+The "Engineering Decisions" section is the most important — it shows I made
+choices, not just installed packages. This is what separates "I did a tutorial"
+from "I built and reasoned about a system."
+
+## Interview pitch update
+"Live demo at [URL], code at github.com/Jtgoyal/rag-arxiv-assistant.
+The README walks through the architecture and the engineering decisions —
+chunk size tuning, two-source ingestion, hallucination handling.
+Each was an explicit tradeoff I tested."
