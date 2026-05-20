@@ -2,6 +2,7 @@
 # Day 6: Streamlit UI for the RAG pipeline.
 import logging
 import warnings
+import re
 
 # Silence the noisy transformers/sentence-transformers warnings
 logging.getLogger("transformers").setLevel(logging.ERROR)
@@ -99,6 +100,9 @@ with st.sidebar:
         for title, url in st.session_state.papers_info.items():
             st.markdown(f"- **{title}**")
 
+        if st.session_state.chunks:
+            st.caption(f"📊 {len(st.session_state.chunks)} chunks indexed across {len(st.session_state.papers_info)} papers.")
+
 
     # ====================
     # MAIN AREA — Q&A
@@ -118,12 +122,15 @@ else:
     if question:
         with st.spinner("Retrieving and generating..."):
             retrieved = st.session_state.index.retrieve(question, k=k)
-            answer = generate_answer(question, retrieved)
+            raw_answer = generate_answer(question, retrieved)
+
+            # Validate citations: drop any [N] that doesn't correspond to a real chunk
+            from rag_pipeline import validate_and_clean_citations
+            answer, cited_indices = validate_and_clean_citations(raw_answer, retrieved)
 
         # Display the answer
         st.markdown("### Answer")
 
-        # Heuristic refusal detection — if LLM said it can't answer, flag it
         refusal_indicators = ["cannot answer", "not enough information", "not in the loaded papers", "insufficient context"]
         is_refusal = any(phrase in answer.lower() for phrase in refusal_indicators)
 
@@ -131,12 +138,32 @@ else:
             st.warning(answer)
             st.caption("The system couldn't find relevant information in the loaded papers. Try a different question or load more papers.")
         else:
-            st.markdown(answer)
+            # Style citations: replace [N] with a visually-prominent badge
+            styled = re.sub(
+                r"\[(\d+)\]",
+                r"**[\1]**",  # bold the citation
+                answer,
+            )
+            st.markdown(styled)
 
-        # Display sources in expandable section
+            # If the LLM cited specific sources, surface a clear hint
+            if cited_indices:
+                cited_str = ", ".join(f"[{n}]" for n in cited_indices)
+                st.caption(f"Cited sources: {cited_str} — see below for full chunks.")
+            else:
+                st.caption("⚠️ No source citations detected in the answer. Verify carefully against the sources below.")
+
+        # Display sources — cited ones first and expanded, uncited collapsed
         st.markdown("### Sources")
+        st.caption("Cited sources are expanded by default. Uncited sources are collapsed (the retriever found them but the LLM didn't use them).")
+
+        # Show cited sources first, expanded
         for i, chunk in enumerate(retrieved, start=1):
-            with st.expander(f"[{i}] {chunk['paper_title']} — distance {chunk['distance']:.3f}"):
-                st.markdown(f"**URL:** {chunk['paper_url']}")
+            is_cited = i in cited_indices if not is_refusal else False
+            label = f"{'✅' if is_cited else '○'} [{i}] {chunk['paper_title']} — distance {chunk['distance']:.3f}"
+
+            with st.expander(label, expanded=is_cited):
+                st.markdown(f"**URL:** `{chunk['paper_url']}`")
+                st.markdown(f"**Citation status:** {'Cited by LLM' if is_cited else 'Retrieved but not cited'}")
                 st.markdown("**Chunk text:**")
                 st.text(chunk["text"])

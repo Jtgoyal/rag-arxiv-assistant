@@ -5,6 +5,8 @@ import os
 from typing import List, Dict
 import numpy as np
 import faiss
+import re
+from typing import Tuple
 from sentence_transformers import SentenceTransformer
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -187,3 +189,35 @@ if __name__ == "__main__":
         print("\nGenerating answer...\n")
         answer = generate_answer(question, retrieved)
         print(format_response(answer, retrieved))
+
+
+def validate_and_clean_citations(answer: str, retrieved_chunks: List[Dict]) -> Tuple[str, List[int]]:
+    """
+    Parse [N] citations from the answer.
+    Validate: each [N] must correspond to a retrieved chunk (1-indexed).
+    Returns:
+      - cleaned answer (invalid citations like [99] removed)
+      - list of which chunks were actually cited (1-indexed, deduped, sorted)
+    """
+    max_n = len(retrieved_chunks)
+    cited_set = set()
+    invalid_citations = []
+
+    def replace_citation(match: re.Match) -> str:
+        """Replace each [N] in the answer based on validity."""
+        n = int(match.group(1))
+        if 1 <= n <= max_n:
+            cited_set.add(n)
+            return f"[{n}]"  # keep valid citations as-is
+        else:
+            invalid_citations.append(n)
+            return ""  # silently drop invalid ones
+
+    # Regex: [N] where N is one or more digits
+    pattern = re.compile(r"\[(\d+)\]")
+    cleaned_answer = pattern.sub(replace_citation, answer)
+
+    if invalid_citations:
+        print(f"  [citation validator] Dropped {len(invalid_citations)} invalid citations: {invalid_citations}")
+
+    return cleaned_answer, sorted(cited_set)

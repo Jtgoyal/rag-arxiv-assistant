@@ -327,3 +327,31 @@ from "I built and reasoned about a system."
 The README walks through the architecture and the engineering decisions —
 chunk size tuning, two-source ingestion, hallucination handling.
 Each was an explicit tradeoff I tested."
+
+
+# Day 8 — Citation Polish + Validation
+
+## What I built today
+1. Citation validator: parses [N] from LLM output, drops invalid ones (out-of-range)
+2. Styled citation rendering: [N] shown as **bold** in the answer
+3. Smart sources display: cited chunks ✅ expanded, uncited ○ collapsed
+4. Sidebar chunk counter
+
+## Why citation validation matters
+LLMs occasionally hallucinate citations — saying "[8]" when only 5 chunks were retrieved.
+This is a known RAG failure mode called "citation hallucination."
+
+My validator regex-extracts every [N], checks N <= len(retrieved_chunks), drops invalid ones.
+In testing, it caught about 1 in 20 generations producing at least one invalid citation.
+
+## Interview pitch (memorize)
+"My RAG system has three layers of citation handling:
+1. Prompt-engineered [N] format from the LLM
+2. Regex validation: drop citations outside the valid range (catches LLM hallucinations)
+3. UI affordances: cited sources auto-expanded, uncited stay collapsed
+This catches hallucinated citations programmatically and surfaces real ones for verification."
+
+## Limitations (be honest in interview)
+- Validator only catches OUT-OF-RANGE citations (e.g. [99] when only 5 chunks)
+- Does NOT detect citation MISATTRIBUTION: LLM citing [3] for a fact actually supported by [2]
+- Detecting misattribution would need fuzzy matching of claim text against chunk text — left as future work
