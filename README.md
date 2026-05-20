@@ -50,6 +50,8 @@ Researchers face an information-overload problem: ArXiv adds ~500 new ML papers 
 
 ## Architecture
 
+```
+
 ┌─────────────────────────────────────────────────────────────┐
 │                      USER (Browser)                          │
 └──────────────────────────┬──────────────────────────────────┘
@@ -86,6 +88,8 @@ Researchers face an information-overload problem: ArXiv adds ~500 new ML papers 
 │ cited answer
 ▼
 Back to user
+
+```
 
 ---
 
@@ -142,6 +146,7 @@ streamlit run app.py
 ---
 
 ## Project Structure
+```
 rag-arxiv-assistant/
 ├── app.py                      # Streamlit UI
 ├── rag_pipeline.py             # PaperIndex class + generation
@@ -155,7 +160,7 @@ rag-arxiv-assistant/
 ├── NOTES.md                    # Engineering log (daily learnings + bug stories)
 ├── .env.example                # Template for API key
 └── README.md
-
+```
 ---
 
 ## Roadmap
@@ -182,4 +187,3 @@ rag-arxiv-assistant/
 Jatin Goyal — Integrated M.Tech in Mathematics and Computing, IIT (ISM) Dhanbad. Building this project to deepen understanding of production RAG systems for AI/ML internship applications.
 
 [LinkedIn](https://linkedin.com/in/jatin-goyal-142880294) · [GitHub](https://github.com/Jtgoyal)
-Save with Ctrl + S.
