@@ -217,9 +217,10 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Local paper cache
+# Local paper cache (not shipped)
+local_papers/
 papers/
 test_paper.pdf
-*.pdf
 
-local_papers/
+# Screenshots — keep local until Day 13 README polish
+screenshots/

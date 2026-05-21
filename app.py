@@ -56,7 +56,7 @@ with st.sidebar:
         topic = st.text_input("Topic:", value="retrieval augmented generation")
         max_papers = st.slider("Number of papers:", 1, 5, 3)
     else:
-        st.info("Loading PDFs from `local_papers/` folder.")
+        st.info("Loading PDFs from `sample_papers/` folder.")
         topic = None
         max_papers = None
 
@@ -68,7 +68,7 @@ with st.sidebar:
                 if mode == "ArXiv (live)":
                     chunks = fetch_and_chunk(topic, max_papers=max_papers)
                 else:
-                    chunks = load_and_chunk_local(folder="local_papers")
+                    chunks = load_and_chunk_local(folder="sample_papers")
 
                 if not chunks:
                     st.error("No chunks were created. Check your sources.")

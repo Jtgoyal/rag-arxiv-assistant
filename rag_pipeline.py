@@ -40,6 +40,8 @@ class PaperIndex:
 
     def __init__(self, embed_model_name: str = EMBED_MODEL_NAME):
         print(f"Loading embedding model: {embed_model_name}...")
+        os.environ.setdefault('HF_HOME', '/tmp/hf_cache')
+        os.environ.setdefault('TRANSFORMERS_NO_ADVISORY_WARNINGS', '1')
         self.embed_model = SentenceTransformer(embed_model_name)
         self.index = faiss.IndexFlatL2(EMBED_DIM)
         self.chunks: List[Dict] = []  # parallel list — chunks[i] ↔ vector i

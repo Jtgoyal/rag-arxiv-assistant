@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
 import glob
 
-def load_and_chunk_local(folder: str = "local_papers", chunk_size: int = 1000, chunk_overlap: int = 200):
+def load_and_chunk_local(folder: str = "sample_papers", chunk_size: int = 1000, chunk_overlap: int = 200):
     """
     LOCAL MODE: Load PDFs from a local folder instead of fetching from ArXiv.
     Useful for testing when ArXiv is rate-limiting, or for offline development.

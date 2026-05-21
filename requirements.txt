@@ -1,11 +1,25 @@
-langchain
-langchain-community
-langchain-groq
-faiss-cpu
-streamlit
-groq
-arxiv
-pymupdf
+# Core LLM/RAG stack — pinned to match local dev environment
+langchain==1.3.1
+langchain-community==0.4.1
+langchain-core==1.4.0
+langchain-groq==1.1.2
+langchain-text-splitters==1.1.2
+
+# LLM API
+groq==0.37.1
+
+# Embeddings + vector store
+sentence-transformers==5.5.0
+faiss-cpu==1.13.2
+
+# PDF processing
+PyMuPDF==1.27.2.3
+
+# Paper fetching
+arxiv==3.0.0
+
+# UI
+streamlit==1.57.0
+
+# Utilities
 python-dotenv
-sentence-transformers
-torchvision
