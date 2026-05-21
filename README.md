@@ -2,7 +2,7 @@
 
 A Retrieval-Augmented Generation (RAG) system that answers questions about research papers with inline citations.
 
-**🔗 Live Demo:** [coming soon — Day 10]
+**🔗 Live Demo:** [https://jatin-rag-arxiv.streamlit.app](https://jatin-rag-arxiv.streamlit.app)
 **📂 Repo:** [github.com/Jtgoyal/rag-arxiv-assistant](https://github.com/Jtgoyal/rag-arxiv-assistant)
 
 ---
@@ -76,15 +76,50 @@ flowchart TD
 - Local mode (load from a folder) is the reliable demo path
 - Same chunk-dict format from both → rest of the pipeline is decoupled from data source
 
-### Hallucination guard via prompt
-- LLM instructed to refuse if context is insufficient
-- Verified with out-of-scope queries (e.g., "What is the capital of France?") — system correctly refuses
-- **Insight from testing:** retrieval distance ≠ relevance. Distance measures vector proximity; LLM reading the actual text is a better judge of content relevance. (Day 9 will add a complementary hard distance threshold.)
+### Two-layer hallucination guard
+
+**Layer 1 (Distance threshold):** Before calling the LLM, check the top retrieval distance. If `> 1.5`, refuse immediately — saves cost/latency on obviously off-topic queries. The UI shows a red error with the actual distance value.
+
+**Layer 2 (LLM-judged refusal):** For queries that pass Layer 1, the LLM is instructed to refuse if context is insufficient. The UI shows a yellow warning, distinguishing it from the red Layer 1 case.
+
+**Why two layers:** Distance and content relevance are correlated but not identical signals. My testing showed two queries with similar distances correctly producing opposite behaviors — the LLM reading actual chunk text is a smarter judge than a threshold, but the threshold catches obvious garbage cheaply. Belt and suspenders.
+
+**Citation validation:** Inline `[N]` references are regex-extracted and validated against retrieved chunks. Invalid citations (e.g., LLM hallucinating `[8]` when only 5 chunks exist) are silently dropped. Across 20 eval questions, the validator caught 132 hallucinated citations.
 
 ### Defensive ArXiv downloads
 - Retries on HTTP 429 with exponential backoff (10s, 20s, 30s)
 - Retries on incomplete-read errors (transient network drops)
 - Corrupt-cache detection: PDFs < 50KB on disk are treated as half-downloads and re-fetched
+
+---
+
+## Evaluation
+
+Built a 20-question evaluation set covering three categories:
+- **Direct factual** (11 questions) — single-paper retrieval
+- **Comparison** (4 questions) — multi-paper synthesis
+- **Out-of-scope** (5 questions) — should be refused
+
+### Results
+
+| Metric | Score | Notes |
+|---|---|---|
+| Retrieval accuracy (top-5) | **95%** (19/20) | Expected paper in top-5 retrieved |
+| Refusal correctness | **85%** (17/20) | OOS refused, in-scope answered |
+| Out-of-scope refusal rate | **80%** (4/5) | Two-layer guard performance |
+| Citation hallucinations caught | **132 invalid `[N]` refs dropped** | Validator caught LLM-fabricated references |
+| Keyword recall (answered) | 53% | Strict matching — many "failures" are correct paraphrases (see failure_analysis.md) |
+
+### Failure modes (3 of 20)
+
+Documented in `evaluation/failure_analysis.md`:
+
+- **Q11 / Q20** — Over-refusal on compound or math-explanation questions. Fix: multi-query retrieval.
+- **Q16** — Hallucination slip-through on ML-adjacent OOS query. Fix: tighter L2 prompt or reranker.
+
+The 3 failures reveal a precision/recall tension between Layer 1 and Layer 2 guards. Current calibration prioritizes refusal over hallucination — appropriate for a research assistant.
+
+To reproduce: `python evaluation/run_eval.py`
 
 ---
 
@@ -118,19 +153,26 @@ streamlit run app.py
 ## Project Structure
 ```
 rag-arxiv-assistant/
-├── app.py                      # Streamlit UI
-├── rag_pipeline.py             # PaperIndex class + generation
-├── paper_pipeline.py           # Combines fetch + chunk; local + ArXiv modes
-├── fetch_arxiv.py              # ArXiv API + robust PDF download
-├── pdf_to_chunks.py            # PyMuPDF + RecursiveCharacterTextSplitter
-├── experiment_embeddings.py    # Day 2 standalone embedding playground
-├── experiment_faiss.py         # Day 2 standalone FAISS playground
-├── hello_groq.py               # Day 1 hello-world LLM call
+├── app.py                       # Streamlit UI
+├── rag_pipeline.py              # PaperIndex class + generation + two-layer guard + citation validator
+├── paper_pipeline.py            # Combines fetch + chunk; local + ArXiv modes
+├── fetch_arxiv.py               # ArXiv API + robust PDF download
+├── pdf_to_chunks.py             # PyMuPDF + RecursiveCharacterTextSplitter
+├── sample_papers/               # Pre-loaded PDFs for the deployed demo
+├── evaluation/
+│   ├── eval_set.py              # 20-question manual evaluation set
+│   ├── run_eval.py              # Eval runner with retrieval/refusal/keyword metrics
+│   ├── results.json             # Latest eval results
+│   └── failure_analysis.md      # Documented failure modes + planned fixes
+├── experiment_embeddings.py     # Day 2 standalone embedding playground
+├── experiment_faiss.py          # Day 2 standalone FAISS playground
+├── hello_groq.py                # Day 1 hello-world LLM call
 ├── requirements.txt
-├── NOTES.md                    # Engineering log (daily learnings + bug stories)
-├── .env.example                # Template for API key
+├── NOTES.md                     # Engineering log (daily learnings + bug stories)
+├── .env.example                 # Template for API key
 └── README.md
-```
+``` 
+
 ---
 
 ## Roadmap
@@ -142,10 +184,10 @@ rag-arxiv-assistant/
 - [x] Day 5: End-to-end RAG pipeline (CLI)
 - [x] Day 6: Streamlit UI with refusal banner
 - [x] Day 7: README + repo polish
-- [ ] Day 8: Citation polish (clickable references)
-- [ ] Day 9: Hard distance threshold (hallucination guard, Layer 2)
-- [ ] Day 10: Deploy to Streamlit Cloud
-- [ ] Day 11: Evaluation set + metrics
+- [x] Day 8: Citation polish + validation
+- [x] Day 9: Two-layer hallucination guard
+- [x] Day 10: Deploy to Streamlit Cloud
+- [x] Day 11: Evaluation set + metrics
 - [ ] Day 12: Edge cases + error handling
 - [ ] Day 13: Demo GIF
 - [ ] Day 14: Resume + interview prep

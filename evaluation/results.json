@@ -1,0 +1,485 @@
+[
+  {
+    "id": 1,
+    "question": "What is RAG?",
+    "category": "direct",
+    "refusal_reason": "answered",
+    "top_distance": 1.178,
+    "retrieved_papers": [
+      "self_rag",
+      "rag_paper"
+    ],
+    "expected_papers": [
+      "rag_paper"
+    ],
+    "retrieval_correct": true,
+    "keyword_recall": 0.5,
+    "matched_keywords": [
+      "retrieval",
+      "augmented"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [
+      1
+    ],
+    "answer_preview": "RAG stands for Retrieval-Augmented Generator [1]."
+  },
+  {
+    "id": 2,
+    "question": "What are the two main components of RAG?",
+    "category": "direct",
+    "refusal_reason": "answered",
+    "top_distance": 1.221,
+    "retrieved_papers": [
+      "self_rag",
+      "rag_paper"
+    ],
+    "expected_papers": [
+      "rag_paper"
+    ],
+    "retrieval_correct": true,
+    "keyword_recall": 0.25,
+    "matched_keywords": [
+      "generator"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [
+      1
+    ],
+    "answer_preview": "The two main components of RAG are:\n\n1. Generator model M [1]\n2. Retrieval model C [1]"
+  },
+  {
+    "id": 3,
+    "question": "What is the role of the retriever in RAG?",
+    "category": "direct",
+    "refusal_reason": "answered",
+    "top_distance": 1.069,
+    "retrieved_papers": [
+      "self_rag",
+      "rag_paper"
+    ],
+    "expected_papers": [
+      "rag_paper"
+    ],
+    "retrieval_correct": true,
+    "keyword_recall": 0.25,
+    "matched_keywords": [
+      "retrieve"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [
+      2,
+      4,
+      5
+    ],
+    "answer_preview": "The retriever in RAG is responsible for retrieving relevant information for the task [4]. It is a key feature of RAG that learns to retrieve relevant information, and its effectiveness is assessed thr..."
+  },
+  {
+    "id": 4,
+    "question": "What is Self-RAG?",
+    "category": "direct",
+    "refusal_reason": "answered",
+    "top_distance": 1.111,
+    "retrieved_papers": [
+      "self_rag"
+    ],
+    "expected_papers": [
+      "self_rag"
+    ],
+    "retrieval_correct": true,
+    "keyword_recall": 0.67,
+    "matched_keywords": [
+      "self-reflection",
+      "critique"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [
+      1,
+      4
+    ],
+    "answer_preview": "SELF-RAG is a new framework that enhances the quality and factuality of Large Language Models (LLMs) through retrieval on demand and self-reflection [1]. It is designed to learn to retrieve, generate,..."
+  },
+  {
+    "id": 5,
+    "question": "What are reflection tokens?",
+    "category": "direct",
+    "refusal_reason": "answered",
+    "top_distance": 0.891,
+    "retrieved_papers": [
+      "self_rag"
+    ],
+    "expected_papers": [
+      "self_rag"
+    ],
+    "retrieval_correct": true,
+    "keyword_recall": 0.75,
+    "matched_keywords": [
+      "reflection",
+      "token",
+      "retrieve"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [
+      1,
+      2,
+      3,
+      5
+    ],
+    "answer_preview": "Reflection tokens are a type of token used in SELF-RAG [1] to assess and guide text generation. They are inspired by reward models used in reinforcement learning [3] and are inserted offline into the ..."
+  },
+  {
+    "id": 6,
+    "question": "What is REALM?",
+    "category": "direct",
+    "refusal_reason": "answered",
+    "top_distance": 1.042,
+    "retrieved_papers": [
+      "realm"
+    ],
+    "expected_papers": [
+      "realm"
+    ],
+    "retrieval_correct": true,
+    "keyword_recall": 0.75,
+    "matched_keywords": [
+      "retrieval",
+      "language model",
+      "pre-training"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [
+      3,
+      4
+    ],
+    "answer_preview": "REALM is a Retrieval-Augmented Language Model Pre-Training method [1, 2, 3, 4, 5]. It is a framework that combines language modeling with corpus as context and retrieve-and-edit with learned retrieval..."
+  },
+  {
+    "id": 7,
+    "question": "How is REALM pre-trained?",
+    "category": "direct",
+    "refusal_reason": "answered",
+    "top_distance": 0.84,
+    "retrieved_papers": [
+      "realm"
+    ],
+    "expected_papers": [
+      "realm"
+    ],
+    "retrieval_correct": true,
+    "keyword_recall": 0.67,
+    "matched_keywords": [
+      "masked language modeling",
+      "retrieve"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [
+      1,
+      4,
+      5
+    ],
+    "answer_preview": "REALM is pre-trained by maximizing the likelihood of its generative process [1]. The generative process involves a retrieve-then-predict framework, where the model first retrieves relevant documents f..."
+  },
+  {
+    "id": 8,
+    "question": "What problems does RAG solve?",
+    "category": "direct",
+    "refusal_reason": "answered",
+    "top_distance": 1.121,
+    "retrieved_papers": [
+      "self_rag",
+      "rag_paper"
+    ],
+    "expected_papers": [
+      "rag_paper"
+    ],
+    "retrieval_correct": true,
+    "keyword_recall": 1.0,
+    "matched_keywords": [
+      "hallucination",
+      "knowledge",
+      "factual"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [
+      3,
+      4
+    ],
+    "answer_preview": "RAG solves the problem of hallucination in text generation, as it generates factually correct text more often than BART [3]. It also addresses the issue of unanswerable questions, as it can rely on pa..."
+  },
+  {
+    "id": 9,
+    "question": "How does Self-RAG differ from standard RAG?",
+    "category": "compare",
+    "refusal_reason": "answered",
+    "top_distance": 1.152,
+    "retrieved_papers": [
+      "self_rag",
+      "rag_paper"
+    ],
+    "expected_papers": [
+      "self_rag",
+      "rag_paper"
+    ],
+    "retrieval_correct": true,
+    "keyword_recall": 0.33,
+    "matched_keywords": [
+      "critique"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [
+      1
+    ],
+    "answer_preview": "SELF-RAG differs from standard RAG in that it first determines if augmenting the continued generation with retrieved passages would be helpful [1]. If so, it outputs a retrieval token that calls a ret..."
+  },
+  {
+    "id": 10,
+    "question": "What is the difference between RAG and REALM?",
+    "category": "compare",
+    "refusal_reason": "answered",
+    "top_distance": 1.148,
+    "retrieved_papers": [
+      "rag_paper",
+      "realm"
+    ],
+    "expected_papers": [
+      "rag_paper",
+      "realm"
+    ],
+    "retrieval_correct": true,
+    "keyword_recall": 0.67,
+    "matched_keywords": [
+      "pre-training",
+      "encoder"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [
+      3,
+      4,
+      5
+    ],
+    "answer_preview": "From the loaded papers, it appears that RAG and REALM are both retrieval-augmented language models, but they have some differences in their architecture and performance.\n\nRAG [1, 2, 5] is a retrieval-..."
+  },
+  {
+    "id": 11,
+    "question": "Compare the retrieval mechanisms in REALM and Self-RAG.",
+    "category": "compare",
+    "refusal_reason": "llm_refusal",
+    "top_distance": 0.791,
+    "retrieved_papers": [
+      "self_rag",
+      "rag_paper"
+    ],
+    "expected_papers": [
+      "self_rag",
+      "realm"
+    ],
+    "retrieval_correct": true,
+    "keyword_recall": 0.0,
+    "matched_keywords": [],
+    "refusal_correct": false,
+    "cited_indices": [],
+    "answer_preview": "I cannot answer this from the loaded papers."
+  },
+  {
+    "id": 12,
+    "question": "Which paper introduced reflection tokens?",
+    "category": "compare",
+    "refusal_reason": "answered",
+    "top_distance": 1.044,
+    "retrieved_papers": [
+      "self_rag"
+    ],
+    "expected_papers": [
+      "self_rag"
+    ],
+    "retrieval_correct": true,
+    "keyword_recall": 0.5,
+    "matched_keywords": [
+      "reflection tokens"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [],
+    "answer_preview": "The paper that introduced reflection tokens is not explicitly mentioned in the provided context. However, it is mentioned that the concept of reflection tokens is inspired by reward models used in rei..."
+  },
+  {
+    "id": 13,
+    "question": "What is the capital of France?",
+    "category": "out_of_scope",
+    "refusal_reason": "distance_threshold",
+    "top_distance": 1.511,
+    "retrieved_papers": [
+      "self_rag",
+      "rag_paper",
+      "realm"
+    ],
+    "expected_papers": [],
+    "retrieval_correct": true,
+    "keyword_recall": 1.0,
+    "matched_keywords": [
+      "cannot answer",
+      "not",
+      "loaded papers"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [],
+    "answer_preview": "I cannot answer this from the loaded papers. The most similar passage I found has distance 1.511, which is above the relevance threshold (1.5). Try a different question or load more papers on this top..."
+  },
+  {
+    "id": 14,
+    "question": "How do I bake a chocolate cake?",
+    "category": "out_of_scope",
+    "refusal_reason": "distance_threshold",
+    "top_distance": 1.794,
+    "retrieved_papers": [
+      "self_rag",
+      "realm"
+    ],
+    "expected_papers": [],
+    "retrieval_correct": true,
+    "keyword_recall": 1.0,
+    "matched_keywords": [
+      "cannot answer"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [],
+    "answer_preview": "I cannot answer this from the loaded papers. The most similar passage I found has distance 1.794, which is above the relevance threshold (1.5). Try a different question or load more papers on this top..."
+  },
+  {
+    "id": 15,
+    "question": "How do I train a neural network from scratch?",
+    "category": "out_of_scope",
+    "refusal_reason": "llm_refusal",
+    "top_distance": 1.342,
+    "retrieved_papers": [
+      "self_rag",
+      "realm"
+    ],
+    "expected_papers": [],
+    "retrieval_correct": true,
+    "keyword_recall": 1.0,
+    "matched_keywords": [
+      "cannot answer"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [],
+    "answer_preview": "(\u03b1\ns\nf\n(x, z, s))\nwhere \u03b1s is a learnable parameter and f(x, z, s) is a\nfunction that takes as input the input sequence x, the\ndocument z, and the span s, and outputs a score that\nindicates how well t..."
+  },
+  {
+    "id": 16,
+    "question": "What is the loss function for training a transformer?",
+    "category": "out_of_scope",
+    "refusal_reason": "answered",
+    "top_distance": 1.222,
+    "retrieved_papers": [
+      "rag_paper",
+      "realm"
+    ],
+    "expected_papers": [],
+    "retrieval_correct": false,
+    "keyword_recall": 0.0,
+    "matched_keywords": [],
+    "refusal_correct": false,
+    "cited_indices": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "answer_preview": "\u2212\n(\u2225x \u2212 y\u2225\n2\n+\n\u2225y \u2212 s\u2208S(z,y)\nx\n\u2225\n2\n)\n[2] From 'realm':\nThe goal is to find the optimal value of x that minimizes the\nexpression in equation (1) [1]. This is equivalent to solving\nthe following optimiz..."
+  },
+  {
+    "id": 17,
+    "question": "Who won the FIFA World Cup in 2022?",
+    "category": "out_of_scope",
+    "refusal_reason": "llm_refusal",
+    "top_distance": 1.467,
+    "retrieved_papers": [
+      "self_rag",
+      "rag_paper",
+      "realm"
+    ],
+    "expected_papers": [],
+    "retrieval_correct": true,
+    "keyword_recall": 1.0,
+    "matched_keywords": [
+      "cannot answer"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [],
+    "answer_preview": "I cannot answer this from the loaded papers."
+  },
+  {
+    "id": 18,
+    "question": "How many parameters does RAG have?",
+    "category": "direct",
+    "refusal_reason": "answered",
+    "top_distance": 1.014,
+    "retrieved_papers": [
+      "self_rag",
+      "rag_paper"
+    ],
+    "expected_papers": [
+      "rag_paper"
+    ],
+    "retrieval_correct": true,
+    "keyword_recall": 0.67,
+    "matched_keywords": [
+      "parameters",
+      "BART"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [
+      1
+    ],
+    "answer_preview": "RAG models contain the trainable parameters for the BERT-base query and document encoder of DPR, with 110M parameters each, and 406M trainable parameters from BART-large, making a total of 626M traina..."
+  },
+  {
+    "id": 19,
+    "question": "What datasets are used in the RAG paper experiments?",
+    "category": "direct",
+    "refusal_reason": "answered",
+    "top_distance": 1.095,
+    "retrieved_papers": [
+      "self_rag",
+      "rag_paper"
+    ],
+    "expected_papers": [
+      "rag_paper"
+    ],
+    "retrieval_correct": true,
+    "keyword_recall": 1.0,
+    "matched_keywords": [
+      "Natural Questions",
+      "TriviaQA",
+      "Jeopardy"
+    ],
+    "refusal_correct": true,
+    "cited_indices": [
+      1
+    ],
+    "answer_preview": "The datasets used in the RAG paper experiments are:\n\n1. Natural Questions (NQ)\n2. TriviaQA\n3. WebQuestions\n4. CuratedTrec\n5. Jeopardy Question Generation\n6. MS-MARCO\n7. FEVER-3-way\n8. FEVER-2-way\n\nThe..."
+  },
+  {
+    "id": 20,
+    "question": "Explain the math behind dense retrieval.",
+    "category": "direct",
+    "refusal_reason": "llm_refusal",
+    "top_distance": 0.931,
+    "retrieved_papers": [
+      "self_rag",
+      "rag_paper",
+      "realm"
+    ],
+    "expected_papers": [
+      "rag_paper",
+      "realm"
+    ],
+    "retrieval_correct": true,
+    "keyword_recall": 0.0,
+    "matched_keywords": [],
+    "refusal_correct": false,
+    "cited_indices": [],
+    "answer_preview": "I cannot answer this from the loaded papers."
+  }
+]

@@ -398,3 +398,33 @@ correctness. Belt and suspenders."
 - Threshold is calibrated to this specific embedding model + chunk size; not portable
 - Citation misattribution still possible: LLM citing [3] for a fact actually from [2]
 - No automatic threshold learning — manual tuning only
+
+
+# Day 10 — Deployed to Streamlit Cloud 🚀
+
+## Live URL
+https://jatin-rag-arxiv.streamlit.app
+
+## How smoothly did it go?
+First build succeeded with no errors. Surprising — I expected at least one
+dependency issue. Credit to pinning exact versions in requirements.txt.
+
+## Verified on live URL
+- Local PDFs mode loads sample_papers/ (3 papers, 283 chunks)
+- Query "what is RAG?" returns cited answer with [1], [4] citations
+- Layer 1 / Layer 2 hallucination guards work (verified separately)
+- Sidebar chunk counter shows correctly
+- Citation styling and validation working
+
+## What makes the deployment defensible in interviews
+- HF_HOME pointed to /tmp/hf_cache (writable on Streamlit Cloud)
+- Pinned versions in requirements.txt prevent drift between local and cloud
+- sample_papers/ shipped with the repo so the demo is self-contained
+- Secrets via Streamlit Cloud TOML format (not committed to repo)
+
+## Interview pitch (the final form)
+"Live at jatin-rag-arxiv.streamlit.app. Pre-loaded with 3 papers about RAG.
+Try off-topic queries to see the two-layer hallucination guard refuse cleanly.
+Code at github.com/Jtgoyal/rag-arxiv-assistant."
+
+
