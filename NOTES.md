@@ -428,3 +428,73 @@ Try off-topic queries to see the two-layer hallucination guard refuse cleanly.
 Code at github.com/Jtgoyal/rag-arxiv-assistant."
 
 
+# Day 11 — Evaluation Set + Metrics
+
+## What I built
+- 20-question manual eval set covering 3 categories:
+  - 11 direct factual (single-paper)
+  - 4 comparison (multi-paper)
+  - 5 out-of-scope (should refuse)
+- Automated runner (`evaluation/run_eval.py`) scoring 4 metrics
+- `failure_analysis.md` documenting 3 failures with root cause + planned fix
+- Eval set + runner committed to repo so anyone can reproduce
+
+## Real numbers from my eval run
+- **Retrieval accuracy (top-5): 95%** (19/20)
+- **Refusal correctness: 85%** (17/20)
+- **Out-of-scope refusal rate: 80%** (4/5)
+- **Citation hallucinations caught by validator: 132** (across 20 queries)
+- Keyword recall: 53% — but this is fragile, see below
+
+## The 132 invalid citations finding (most important)
+The Day 8 citation validator silently dropped 132 `[N]` references where the LLM
+cited chunks like [6], [7], [8] when only 5 chunks were retrieved per query.
+Without that validator, users would have seen fake citations pointing nowhere.
+
+This is the single most concrete "your differentiator works" finding from the eval.
+It's hard, measured evidence that LLMs hallucinate citations frequently, and that
+my regex validator catches them before display.
+
+## The 3 failures revealed a precision/recall tension
+- **Q11, Q20: over-refusal** on compound / math-explanation questions. LLM saw chunks
+  with relevant content but no single chunk packaged the answer, so it played it safe.
+  Fix: multi-query retrieval (split compound questions, retrieve per sub-query, merge).
+- **Q16: hallucination slip-through** on "what is the loss function for training a
+  transformer?" — ML jargon in papers kept distances under threshold, LLM tried to
+  answer. Fix: tighter L2 prompt or reranker that scores topical match.
+
+These are opposite ends of the same dial. Can't reduce one without increasing the other
+unless I add new mechanisms (reranker, multi-query) — both are documented as future work.
+
+## Why keyword recall (53%) is a misleading number
+The LLM frequently paraphrased correctly using synonyms my expected_keywords didn't include.
+E.g., "dot product" was my expected term but LLM wrote "vector similarity" — semantically right,
+keyword recall failure.
+
+For a real eval method, I'd compute embedding similarity between LLM answer and a ground-truth
+reference answer rather than literal substring match. Left as future work.
+
+This is exactly the kind of self-critique interviewers like — "I know my eval method has limits
+and here's how I'd fix it."
+
+## Interview pitch (memorize cold)
+
+Q: "How did you evaluate your system?"
+A: "I built a 20-question manual evaluation set covering direct factual, multi-paper comparison,
+and out-of-scope questions. Hit 95% retrieval@5, 85% refusal correctness, 80% OOS refusal.
+
+The most interesting finding: my citation validator dropped 132 hallucinated `[N]` references
+across the 20 queries. Without it, users would have seen fake citations.
+
+I documented 3 specific failures: two over-refusals on compound questions, one hallucination
+slip-through on an ML-adjacent OOS query. These reveal a precision/recall tension between my
+two guard layers, which I've documented with planned fixes (multi-query retrieval for compound
+questions, reranker for the slip-through). Eval is reproducible — `python evaluation/run_eval.py`
+in the repo."
+
+## Honest limitations
+- Keyword matching is fragile — better eval method needed (embedding similarity)
+- 20 questions is small — production eval would be 500+ auto-generated
+- Manual ground-truth labeling doesn't scale
+- Need a way to detect citation MISATTRIBUTION (LLM cites [3] for fact from [2])
+  — currently only catch out-of-range citations
