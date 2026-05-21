@@ -2,11 +2,10 @@
 # Day 5: End-to-end RAG. Takes a topic + question, returns a cited answer.
 
 import os
-from typing import List, Dict
+from typing import List, Dict,  Tuple
 import numpy as np
 import faiss
 import re
-from typing import Tuple
 from sentence_transformers import SentenceTransformer
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -23,6 +22,7 @@ EMBED_MODEL_NAME = "all-MiniLM-L6-v2"
 EMBED_DIM = 384  # MiniLM output dimension
 TOP_K = 5         # how many chunks to retrieve per query
 LLM_MODEL = "llama-3.1-8b-instant"
+DISTANCE_THRESHOLD = 1.5  
 
 
 # ====================
@@ -118,6 +118,45 @@ Question: {question}
 Answer:"""
     return prompt
 
+
+def should_refuse_by_distance(retrieved_chunks: List[Dict], threshold: float = DISTANCE_THRESHOLD) -> bool:
+    """
+    Layer 1 hallucination guard: distance threshold.
+    If the top retrieved chunk is too far from the query in vector space,
+    refuse before calling the LLM.
+    """
+    if not retrieved_chunks:
+        return True
+    top_distance = retrieved_chunks[0]["distance"]
+    return top_distance > threshold
+
+
+def generate_answer_with_guard(question: str, retrieved_chunks: List[Dict]) -> Tuple[str, str]:
+    """
+    Wraps generate_answer with the distance-threshold guard.
+    Returns (answer_text, refusal_reason) where reason is one of:
+    'distance_threshold', 'llm_refusal', or 'answered'.
+    """
+    if should_refuse_by_distance(retrieved_chunks):
+        top_d = retrieved_chunks[0]["distance"] if retrieved_chunks else float("inf")
+        msg = (
+            "I cannot answer this from the loaded papers. "
+            f"The most similar passage I found has distance {top_d:.3f}, "
+            f"which is above the relevance threshold ({DISTANCE_THRESHOLD}). "
+            "Try a different question or load more papers on this topic."
+        )
+        return msg, "distance_threshold"
+
+    answer = generate_answer(question, retrieved_chunks)
+
+    refusal_indicators = ["cannot answer", "not enough information", "not in the loaded papers", "insufficient context"]
+    if any(phrase in answer.lower() for phrase in refusal_indicators):
+        return answer, "llm_refusal"
+
+    return answer, "answered"
+
+
+# ↓ Your existing generate_answer function stays below, unchanged ↓
 
 def generate_answer(question: str, retrieved_chunks: List[Dict]) -> str:
     """

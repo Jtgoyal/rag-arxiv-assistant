@@ -355,3 +355,46 @@ This catches hallucinated citations programmatically and surfaces real ones for 
 - Validator only catches OUT-OF-RANGE citations (e.g. [99] when only 5 chunks)
 - Does NOT detect citation MISATTRIBUTION: LLM citing [3] for a fact actually supported by [2]
 - Detecting misattribution would need fuzzy matching of claim text against chunk text — left as future work
+
+
+# Day 9 — Hard Distance Threshold (Hallucination Guard, Layer 2)
+
+## What I built today
+Pre-LLM distance threshold check. If the closest retrieved chunk has L2 distance
+above 1.5, the system refuses BEFORE calling the LLM. Combines with the existing
+prompt-based refusal to form a two-layer defense.
+
+## Architecture
+Three possible response states, color-coded in the UI:
+- 🛑 Layer 1 (red): distance threshold exceeded → no LLM call, instant refusal
+- ⚠️ Layer 2 (yellow): LLM saw the context, judged it insufficient
+- ✅ Answered (normal): cited answer with verified [N] references
+
+## Why two layers (the key insight)
+- Distance and content relevance are CORRELATED but not identical signals
+- Distance = vector proximity (cheap, fast)
+- LLM judgment = content relevance (slower, smarter)
+- Day 5 testing showed two queries with similar distances had opposite correctness
+- So distance alone can't replace LLM judgment, but it catches obvious garbage cheaply
+- Belt and suspenders: each layer catches what the other misses
+
+## Threshold tuning
+- 1.2: too strict, refused valid queries
+- 1.5: sweet spot
+- 2.0: too lenient
+- Will re-tune if embedding model or chunk size changes
+- For multi-environment portability, normalize per-query or use rerankers
+
+## Interview pitch (memorize cold)
+"Two-layer hallucination guard. Layer 1: programmatic distance threshold —
+top-1 distance > 1.5 triggers refusal without LLM call. Layer 2: prompt-based
+refusal — LLM instructed to refuse if context is insufficient. The two layers
+fire on different signals (vector proximity vs content relevance), so they're
+complementary. The architecture came from a testing insight on Day 5 where I
+observed distance alone wasn't a reliable signal — same distance range, opposite
+correctness. Belt and suspenders."
+
+## Failure modes I know about but didn't fix
+- Threshold is calibrated to this specific embedding model + chunk size; not portable
+- Citation misattribution still possible: LLM citing [3] for a fact actually from [2]
+- No automatic threshold learning — manual tuning only

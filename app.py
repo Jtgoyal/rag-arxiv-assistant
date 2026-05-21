@@ -11,7 +11,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 
 import streamlit as st
 from paper_pipeline import fetch_and_chunk, load_and_chunk_local
-from rag_pipeline import PaperIndex, generate_answer, format_response, TOP_K
+from rag_pipeline import PaperIndex, generate_answer, generate_answer_with_guard, format_response, TOP_K, DISTANCE_THRESHOLD, validate_and_clean_citations
 
 
 # ====================
@@ -122,34 +122,35 @@ else:
     if question:
         with st.spinner("Retrieving and generating..."):
             retrieved = st.session_state.index.retrieve(question, k=k)
-            raw_answer = generate_answer(question, retrieved)
 
-            # Validate citations: drop any [N] that doesn't correspond to a real chunk
-            from rag_pipeline import validate_and_clean_citations
-            answer, cited_indices = validate_and_clean_citations(raw_answer, retrieved)
+            # Two-layer hallucination guard
+            raw_answer, refusal_reason = generate_answer_with_guard(question, retrieved)
+
+            # Citation validation (only meaningful when LLM actually answered)
+            if refusal_reason == "answered":
+                answer, cited_indices = validate_and_clean_citations(raw_answer, retrieved)
+            else:
+                answer = raw_answer
+                cited_indices = []
 
         # Display the answer
         st.markdown("### Answer")
 
-        refusal_indicators = ["cannot answer", "not enough information", "not in the loaded papers", "insufficient context"]
-        is_refusal = any(phrase in answer.lower() for phrase in refusal_indicators)
-
-        if is_refusal:
-            st.warning(answer)
-            st.caption("The system couldn't find relevant information in the loaded papers. Try a different question or load more papers.")
+        # Three-way display based on what happened
+        if refusal_reason == "distance_threshold":
+            st.error(answer)  # red error for distance-based refusal — clearly off-topic
+            st.caption("🛑 Layer 1 guard: top retrieval distance exceeded threshold. The LLM was not called.")
+        elif refusal_reason == "llm_refusal":
+            st.warning(answer)  # yellow warning for LLM refusal — was close but not answerable
+            st.caption("⚠️ Layer 2 guard: retrieval distances were OK, but the LLM judged the context insufficient.")
         else:
-            # Style citations: replace [N] with a visually-prominent badge
-            styled = re.sub(
-                r"\[(\d+)\]",
-                r"**[\1]**",  # bold the citation
-                answer,
-            )
+            # Style citations: replace [N] with bold
+            styled = re.sub(r"\[(\d+)\]", r"**[\1]**", answer)
             st.markdown(styled)
 
-            # If the LLM cited specific sources, surface a clear hint
             if cited_indices:
                 cited_str = ", ".join(f"[{n}]" for n in cited_indices)
-                st.caption(f"Cited sources: {cited_str} — see below for full chunks.")
+                st.caption(f"✅ Cited sources: {cited_str} — see below for full chunks.")
             else:
                 st.caption("⚠️ No source citations detected in the answer. Verify carefully against the sources below.")
 
@@ -159,8 +160,10 @@ else:
 
         # Show cited sources first, expanded
         for i, chunk in enumerate(retrieved, start=1):
-            is_cited = i in cited_indices if not is_refusal else False
-            label = f"{'✅' if is_cited else '○'} [{i}] {chunk['paper_title']} — distance {chunk['distance']:.3f}"
+            is_cited = i in cited_indices  # cited_indices is [] when refusing, so this works
+            is_above_threshold = chunk["distance"] > DISTANCE_THRESHOLD
+            flag = "✅" if is_cited else ("🚫" if is_above_threshold else "○")
+            label = f"{flag} [{i}] {chunk['paper_title']} — distance {chunk['distance']:.3f}"
 
             with st.expander(label, expanded=is_cited):
                 st.markdown(f"**URL:** `{chunk['paper_url']}`")
