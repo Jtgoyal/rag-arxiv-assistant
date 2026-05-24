@@ -12,6 +12,9 @@ A Retrieval-Augmented Generation (RAG) system that answers questions about resea
 Ask a question in plain English about a set of research papers. The system retrieves the most relevant passages using semantic search, then generates a grounded answer with numbered citations pointing back to the source papers — so every claim is verifiable.
 
 **Example:**
+
+![Cited answer with validated citations](screenshots/cited_answer.png)
+
 > **Q:** What problems does RAG solve?
 >
 > **A:** RAG solves the following problems:
@@ -83,6 +86,13 @@ flowchart TD
 **Layer 2 (LLM-judged refusal):** For queries that pass Layer 1, the LLM is instructed to refuse if context is insufficient. The UI shows a yellow warning, distinguishing it from the red Layer 1 case.
 
 **Why two layers:** Distance and content relevance are correlated but not identical signals. My testing showed two queries with similar distances correctly producing opposite behaviors — the LLM reading actual chunk text is a smarter judge than a threshold, but the threshold catches obvious garbage cheaply. Belt and suspenders.
+
+#### Visual examples
+
+| Layer 1 — Distance threshold (red) | Layer 2 — LLM judgment (yellow) |
+|---|---|
+| ![Layer 1 refusal](screenshots/layer1_refusal.png) | ![Layer 2 refusal](screenshots/layer2_refusal.png) |
+| *"What is the capital of France?" → distance > 1.5, LLM never called* | *Distances OK, but LLM judged context insufficient* |
 
 **Citation validation:** Inline `[N]` references are regex-extracted and validated against retrieved chunks. Invalid citations (e.g., LLM hallucinating `[8]` when only 5 chunks exist) are silently dropped. Across 20 eval questions, the validator caught 132 hallucinated citations.
 
