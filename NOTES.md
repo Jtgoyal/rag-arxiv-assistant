@@ -599,3 +599,39 @@ states clearly without animation.
 no setup needed. README has labeled screenshots of all three response states:
 cited answer (✅), Layer 1 distance refusal (🛑 red), and Layer 2 LLM refusal
 (⚠️ yellow). The side-by-side comparison demonstrates the two-layer guard architecture visually."
+
+
+# Day 14 — Resume + Interview Prep + Wrap-Up
+
+
+## The shift from building to selling
+For 13 days I built. Today I described what I built in a way that
+gets noticed in 30 seconds. Both skills matter.
+
+## What this project demonstrates (for self-reflection)
+- Production-tier engineering: live deployment, error handling, input validation
+- ML engineering: chunking, embeddings, vector search, LLM orchestration
+- Engineering judgment: measured tradeoffs (chunk size, threshold tuning)
+- Evaluation: built a real test set with documented metrics + failure analysis
+- Defense-in-depth: two-layer hallucination guard + citation validation
+- Communication: README with diagrams, screenshots, real numbers
+
+## The headline metric: 132 hallucinated citations caught
+This is the single most powerful interview talking point.
+Anyone can claim "my RAG system works."
+"My validator dropped 132 invalid `[N]` references across 20 queries" is measurable proof.
+
+## Next step
+Apply. The project is done. Anything else is procrastination.
+
+Target: 50 quality applications in 2 weeks. Tier-1 targets: AI/ML startups, deep tech firms.
+Backup tier: tier-2 product companies with ML teams.
+
+## Final interview pitch (the one I'll deliver every time)
+"I built and deployed a RAG-based research paper assistant — live at
+jatin-rag-arxiv.streamlit.app. Tech stack is LangChain, FAISS, sentence-transformers,
+Groq Llama 3, Streamlit. Two architectural differentiators: a two-layer hallucination
+guard combining a distance threshold and LLM-judged refusal, and a citation validator
+that caught 132 hallucinated references across my 20-question evaluation. The two
+defenses fire on different signals — vector proximity vs content relevance — so they
+complement each other. Code on GitHub, eval reproducible with one command."
