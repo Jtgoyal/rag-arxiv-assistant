@@ -568,3 +568,34 @@ Tried `python -c "...open('app.py')..."` and got UnicodeDecodeError on emoji cha
 Fix: always pass `encoding='utf-8'` explicitly when reading files in Python on Windows.
 Default cp1252 codec fails on most modern Unicode. Doesn't affect Streamlit runtime, but
 worth knowing for file-reading scripts.
+
+
+
+# Day 13 — README Visual Polish
+
+## What I shipped today
+- 3 state screenshots embedded in README:
+  - `cited_answer.png`: example of a real cited answer with validator working
+  - `layer1_refusal.png`: red distance-threshold refusal
+  - `layer2_refusal.png`: yellow LLM-judged refusal
+- Side-by-side comparison table in the Hallucination Guard section
+- Screenshot in the Example section showing real output
+
+## Why I skipped the demo GIF
+Ezgif's free-tier 20-second cap conflicted with my demo flow.
+Lowering FPS to fit longer durations would have produced choppy playback.
+The live URL itself (jatin-rag-arxiv.streamlit.app) is the working demo —
+recruiters can click it directly. Static screenshots show all 3 response
+states clearly without animation.
+
+## Why screenshots over a GIF
+- Static images load instantly on GitHub
+- Three labeled images explain the architecture better than a 30-second animation
+- The side-by-side refusal table directly demonstrates the two-layer design
+- A working live URL beats any animated demo
+
+## Interview pitch (refined)
+"Live demo at jatin-rag-arxiv.streamlit.app — pre-loaded with sample papers,
+no setup needed. README has labeled screenshots of all three response states:
+cited answer (✅), Layer 1 distance refusal (🛑 red), and Layer 2 LLM refusal
+(⚠️ yellow). The side-by-side comparison demonstrates the two-layer guard architecture visually."
