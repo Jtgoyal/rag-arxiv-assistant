@@ -498,3 +498,73 @@ in the repo."
 - Manual ground-truth labeling doesn't scale
 - Need a way to detect citation MISATTRIBUTION (LLM cites [3] for fact from [2])
   — currently only catch out-of-range citations
+
+
+# Day 12 — Edge Case Polish + Error Handling
+
+## What I built today
+1. **Input validation on questions:** short queries (< 5 chars) → friendly info; long queries (> 1000 chars) → warning; both skip the LLM call entirely
+2. **Empty ArXiv topic handling:** before today, this returned a raw `HTTP 400` with the full API URL exposed — now shows a clean error before any API call
+3. **Try/except around ArXiv fetch:** transient errors show a user-friendly message with suggested workaround ("switch to Local PDFs"), exception type exposed in italics for debugging
+4. **No-results handling:** garbage ArXiv topic that returns 0 papers → friendly suggestion instead of crashing
+5. **"How to use this" expander at top:** first-time visitors get a self-documenting intro without reading the README
+6. **Footer with metrics:** "95% retrieval@5, 132 invalid citations dropped" visible on every page view
+7. **Bug fix:** moved display code (refusal banners, sources) inside the `else:` branch of the input validation — previously would crash on empty queries because `retrieved` wasn't defined
+
+## Why this day matters
+Recruiters who break the app in 30 seconds form their entire impression from that.
+Day 12 isn't about adding features — it's about making sure failures are graceful
+and the value prop is visible without reading the README.
+
+## Engineering principle
+**Fail loudly to the developer, gracefully to the user.**
+- Internal: exception types logged for debugging
+- External: users see plain-English errors with suggested next steps
+- Never expose raw stack traces, API URLs, or Python types to end-users
+
+## Edge cases I tested
+
+| Test | Behavior before | Behavior after |
+|---|---|---|
+| Empty ArXiv topic | Raw `HTTP 400` with API URL | Friendly "Please enter a topic" |
+| Garbage ArXiv topic (e.g. "asdfasdf") | Raw HTTPError stack | Friendly fallback w/ workaround |
+| Single `?` as question | Went to LLM, wasted call | Blue info banner, no LLM call |
+| Empty question box | Same as `?` | Same fix |
+| 500-word question | Worked, but burned tokens | Yellow warning suggests split |
+| Hindi: "rag kya hai?" | Layer 2 refused | Same — documented as multilingual limitation |
+| Same question twice | LLM non-determinism observed | Documented as known limitation |
+
+## Known limitations (honest writeup)
+
+### 1. Multilingual queries
+- Embedding model is English-focused (all-MiniLM-L6-v2)
+- Hindi "rag kya hai?" got Layer 2 refusal (safe but not ideal)
+- Fix path: swap to `paraphrase-multilingual-MiniLM-L12-v2` — same pipeline, multilingual support
+
+### 2. LLM non-determinism in terminology
+- Tested same query "what is use of rag" twice
+- Run 1: "Reinforced Augmented Generation" (HALLUCINATION)
+- Run 2: "Retrieval-Augmented Generator" (correct)
+- Even temperature=0.1 introduces sampling variation
+- Fix path: temperature=0 (greedy) or upgrade to Llama 3 70B
+
+### 3. Defense-in-depth caught what validation didn't
+- Single `?` got past initial validation (now fixed) but Layer 1 still refused based on distance=1.652
+- Lesson: multiple defenses help — never rely on a single check
+
+## Interview pitches
+
+**Q: How does your app handle errors?**
+> "Three layers. First, input validation rejects garbage queries before any expensive call. Second, try/except around external APIs (ArXiv, Groq) catches exceptions and shows user-friendly messages with suggested workarounds. Third, defense-in-depth via the two-layer hallucination guard catches anything that slips past validation. The principle is 'fail loudly to the developer, gracefully to the user' — exception types are exposed for debugging but never as raw stack traces or API URLs."
+
+**Q: Tell me about an edge case you found while testing.**
+> "I tested ArXiv mode with an empty topic field. The original code passed the empty string to ArXiv's API, which returned HTTP 400 and my app displayed the raw error including the full API endpoint URL. That's terrible UX — it looks broken AND exposes internal implementation details. I added pre-validation that rejects empty topics with a friendly message before any API call. Same fix for garbage topics that return 0 results — now suggests switching to Local PDFs mode as a fallback."
+
+**Q: How do you decide what to validate vs let through?**
+> "I use cost as a signal. Cheap operations (regex check, length check) happen at input. Expensive operations (LLM calls at ~$0.001 + 5 sec latency) only run if pre-checks pass. My input validation rejects queries under 5 chars or over 1000 chars before any LLM call — saves cost AND gives the user faster feedback that they typed something off."
+
+## Windows gotcha learned today
+Tried `python -c "...open('app.py')..."` and got UnicodeDecodeError on emoji characters.
+Fix: always pass `encoding='utf-8'` explicitly when reading files in Python on Windows.
+Default cp1252 codec fails on most modern Unicode. Doesn't affect Streamlit runtime, but
+worth knowing for file-reading scripts.
